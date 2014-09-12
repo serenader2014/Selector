@@ -79,6 +79,73 @@ S.fn.parents = function (selector) {
     }
 };
 
+
+S.fn.on = function () {
+    var self = this,
+        type = arguments[0],
+        target,
+        handler;
+    if (arguments.length < 3 && typeof arguments[1] === 'function') {
+        handler = arguments[1];
+        self.each(function (e, i) {
+            EventHandler(e, type, function (event) {
+                event = event || window.event;
+                handler(event);
+            });
+        });
+    } else if (arguments.length === 3 && typeof arguments[2] === 'function') {
+        target = arguments[1];
+        handler = arguments[2];
+        self.each(function (e, i) {
+            EventHandler(e, type, function (event) {
+                event = event || window.event;
+                if (S.matches(event.target, target)) {
+                    handler(event);
+                }
+            });
+        });
+    }
+    function EventHandler (element, type, handler) {
+        if (element.addEventListener) {
+            element.addEventListener(type, handler, false);
+        } else if (element.attachEvent) {
+            element.attachEvent('on' + type, handler);
+        } else {
+            element['on' + type] = handler;
+        }
+    }
+    
+    return self;
+};
+
+S.fn.off = function () {
+    var self = this,
+        type = arguments[0],
+        target,
+        handler;
+    
+    if (arguments.length < 3 && typeof arguments[1] === 'function') {
+        handler = arguments[1];
+        self.each(function (e, i) {
+            RemoveEventHandler(e, type, function (event) {
+                event = event || window.event;
+                handler(event);
+            });
+        });
+    } else if (arguments.length === 3 && typeof arguments[2] === 'function') {
+        target = arguments[1];
+        handler = arguments[2];
+        self.each(function (e, i) {
+            RemoveEventHandler(e, type, function (event) {
+                event = event || window.event;
+                if (S.matches(event.target, target)) {
+                    handler(event);
+                }
+            });
+        });
+    }
+};
+
 S.matches = function (e, s) {
     if (e.matches) {
         return e.matches(s);
