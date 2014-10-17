@@ -4,7 +4,9 @@ var S = function (e) {
     if (this instanceof S) {
         var ele ,
             arr = [];
-        if (typeof e === 'object') {
+        if (Object.prototype.toString.call(e) === '[object Array]') {
+            ele = e;
+        } else if (typeof e === 'object') {
             ele = [e];
         } else {
             ele = document.querySelectorAll(e);
@@ -23,12 +25,8 @@ var S = function (e) {
 S.fn = S.prototype;
 
 S.fn.each = function (callback) {
-    if ([].forEach) {
-        this.e.forEach(callback);
-    } else {
-        for (var i = 0; i < this.e.length; i++) {
-            callback(this.e[i], i);
-        }
+    for (var i = 0; i < this.e.length; i++) {
+        callback.call(this.e[i], this.e[i], i);
     }
     return this;
 };
@@ -88,19 +86,21 @@ S.fn.on = function () {
     if (arguments.length < 3 && typeof arguments[1] === 'function') {
         handler = arguments[1];
         self.each(function (e, i) {
+            var currentTarget = this;
             EventHandler(e, type, function (event) {
                 event = event || window.event;
-                handler(event);
+                handler.call(currentTarget, event);
             });
         });
     } else if (arguments.length === 3 && typeof arguments[2] === 'function') {
         target = arguments[1];
         handler = arguments[2];
         self.each(function (e, i) {
+            var currentTarget = this;
             EventHandler(e, type, function (event) {
                 event = event || window.event;
                 if (S.matches(event.target, target)) {
-                    handler(event);
+                    handler.call(currentTarget, event);
                 }
             });
         });
@@ -118,12 +118,21 @@ S.fn.on = function () {
     return self;
 };
 
+
+// not working
 S.fn.off = function () {
     var self = this,
         type = arguments[0],
         target,
         handler;
     
+    if (arguments.length === 1) {
+        console.log('trigger off');
+        self.each(function (e, i) {
+            RemoveEventHandler(e, type, undefined);
+        });
+    }
+
     if (arguments.length < 3 && typeof arguments[1] === 'function') {
         handler = arguments[1];
         self.each(function (e, i) {
@@ -144,7 +153,28 @@ S.fn.off = function () {
             });
         });
     }
+
+    function RemoveEventHandler (element, type, handler) {
+        if (element.removeEventListener) {
+            element.removeEventListener(type, handler, false);
+        } else if (element.detachEvent) {
+            element.detachEvent('on' + type, handler);
+        } else {
+            element['on' + type] = null;
+        }
+    }
 };
+
+// this method has a bug
+S.fn.find = function (selector) {
+    var self = this,
+        result = [];
+    self.each( function (e, index) {
+        var ele = this.querySelectorAll(selector);
+        for (var i = ele.length; i--; result.unshift(ele[i]));
+    });
+    return new S(result);
+}
 
 S.matches = function (e, s) {
     if (e.matches) {

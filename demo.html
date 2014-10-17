@@ -10,18 +10,25 @@
     <div>2</div>
     <div>3</div>
     <div>4</div>
-    <div>
+    <div class='a'>
         <div>
             <span><a href="">this is a link</a></span>
+            <span>something</span>
         </div>
         <div></div>
     </div>
     <script>
-        // S('div').each(function (item, index) {
-        //     // console.log(item);
-        //     alert(typeof item);
-        // });
-        alert(S('a').html());
+        S('a').on('click', function () {
+            arguments[0].preventDefault();
+        })
+        S('div').on('click', 'span', function () {
+            console.log('span clicked');
+        })
+
+        // console.log(S('.a').find('span').length);
+        S('.a').find('span').on('click', function () {
+            this.style.color = '#ccc';
+        })
     </script>
 </body>
 </html>
